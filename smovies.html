@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- SMovieS version 1.1.0 -->
+<title>SMovieS</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ff3b5c'/%3E%3Ctext x='32' y='46' font-size='40' font-family='Arial' font-weight='800' text-anchor='middle' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#f3f2ef; --panel:#ffffff; --panel2:#f7f6f3; --ink:#1b1b1f; --muted:#6b6b76; --line:#e3e1dc;
+  --accent:#ff3b5c; --accent2:#0a84ff; --ok:#1fb45a; --shadow:0 1px 2px rgba(0,0,0,.05),0 8px 24px rgba(0,0,0,.06);
+  --stage:#e9e7e2;
+}
+:root[data-theme="dark"]{
+  --bg:#0f0f12; --panel:#18181d; --panel2:#1f1f26; --ink:#ececf1; --muted:#9a9aa6; --line:#2b2b34;
+  --stage:#0a0a0c; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%}
+body{font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);transition:background .2s,color .2s}
+button,input,select,textarea{font:inherit;color:inherit}
+header{display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
+.logo{font-weight:800;font-size:20px;letter-spacing:-.02em}
+.logo b{color:var(--accent)}
+.tag{color:var(--muted);font-size:13px}
+.spacer{flex:1}
+.ver{color:var(--muted);font-size:11px;opacity:.8}
+/* clear (✕) buttons inside text fields */
+.fieldwrap{position:relative}
+.fieldwrap .clr{position:absolute;right:6px;top:6px;border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;border-radius:6px}
+.fieldwrap .clr:hover{color:var(--accent)}
+.fieldwrap>input,.fieldwrap>textarea{padding-right:28px!important}
+/* number boxes beside sliders */
+.numfield{width:72px!important;flex:none;text-align:right}
+/* timeline row tools */
+.dlcol{display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.tools{display:flex;gap:4px}
+.tbtn{border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:2px 6px;cursor:pointer;font-size:12px;line-height:1.4;white-space:nowrap}
+.tbtn:hover{border-color:var(--muted)}
+.msg-row.hidden-msg{opacity:.45;border-style:dashed}
+/* bigger controls on touch screens */
+@media (pointer:coarse){
+  input[type=range]{height:36px}
+  input[type=range]::-webkit-slider-thumb{width:30px;height:30px}
+  input[type=range]::-moz-range-thumb{width:30px;height:30px}
+  .btn{padding:11px 14px}
+}
+.app{display:grid;grid-template-columns:400px 1fr;height:calc(100vh - 53px)}
+aside{border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;border-bottom:1px solid var(--line);padding:0 8px}
+.tabs button{flex:1;background:none;border:0;padding:12px 4px;cursor:pointer;color:var(--muted);font-weight:600;border-bottom:2px solid transparent}
+.tabs button.on{color:var(--ink);border-color:var(--accent)}
+.pane{display:none;padding:16px;overflow:auto;flex:1}
+.pane.on{display:block}
+h3{margin:18px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+h3:first-child{margin-top:0}
+textarea{width:100%;min-height:130px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel2)}
+input[type=text],input[type=number],select{border:1px solid var(--line);border-radius:8px;padding:7px 9px;background:var(--panel2);width:100%}
+input[type=color]{width:36px;height:30px;border:1px solid var(--line);border-radius:8px;padding:2px;background:var(--panel2);cursor:pointer}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.btn{border:1px solid var(--line);background:var(--panel2);padding:8px 12px;border-radius:9px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.blue{background:var(--accent2);border-color:var(--accent2);color:#fff}
+.btn.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.btn.sm{padding:5px 9px;font-size:12px}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.row>label{min-width:92px;color:var(--muted);font-size:13px}
+.grow{flex:1}
+.hint{color:var(--muted);font-size:12px;margin:4px 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer;font-size:12px;background:var(--panel2)}
+.chip.me{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.people{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.person{display:flex;align-items:center;gap:10px;padding:6px 8px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+.person .pname{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.avatar-btn{width:40px;height:40px;border-radius:50%;border:1.5px dashed var(--muted);background:var(--panel) center/cover no-repeat;cursor:pointer;color:var(--muted);font-weight:700;font-size:15px;flex:none;display:flex;align-items:center;justify-content:center;padding:0}
+.avatar-btn.has{border-style:solid;border-color:var(--line);color:transparent}
+.avatar-btn:hover{border-color:var(--accent)}
+.side-toggle{border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:600;background:var(--panel)}
+.side-toggle.me{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.styles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.style-card{border:1.5px solid var(--line);border-radius:12px;padding:8px;cursor:pointer;background:var(--panel2);text-align:center;font-size:12px;font-weight:600}
+.style-card.on{border-color:var(--accent)}
+.style-card .sw{display:flex;flex-direction:column;gap:4px;margin-bottom:6px}
+.style-card .sw i{display:block;height:10px;border-radius:6px;width:70%}
+.style-card .sw i:last-child{align-self:flex-end}
+/* timeline */
+#timeline{display:flex;flex-direction:column;gap:6px}
+.msg-row{display:grid;grid-template-columns:18px 28px 1fr 92px 22px;gap:6px;align-items:start;padding:7px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+.msg-row.dragging{opacity:.4}
+.msg-row.over{border-color:var(--accent)}
+.msg-row.active{box-shadow:0 0 0 2px var(--accent)}
+.grip{cursor:grab;color:var(--muted);user-select:none;padding-top:5px;text-align:center}
+.who{border:0;border-radius:7px;width:28px;height:28px;cursor:pointer;font-weight:700;font-size:11px;color:#fff}
+.who.me{background:var(--accent2)} .who.them{background:#8e8e93}
+.msg-row .txt{border:0;background:transparent;resize:none;min-height:28px;padding:4px;border-radius:6px;width:100%;overflow:hidden}
+.msg-row .txt:focus{outline:1px solid var(--line);background:var(--panel)}
+.msg-row .nm{font-size:11px;color:var(--muted);padding-left:4px}
+.dl{display:flex;align-items:center;gap:2px}
+.dl input{padding:5px;text-align:right}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:16px;padding-top:4px}
+.x:hover{color:var(--accent)}
+/* stage */
+main{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--stage)}
+.toolbar{display:flex;gap:8px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+.stagewrap{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;min-height:0;position:relative}
+#stage{max-width:100%;max-height:100%;border-radius:14px;box-shadow:var(--shadow);cursor:grab;touch-action:none;background:
+  conic-gradient(#ccc 25%,#eee 0 50%,#ccc 0 75%,#eee 0) 0 0/20px 20px}
+#stage.drag{cursor:grabbing}
+.transport{display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--line);background:var(--panel)}
+#scrub{flex:1}
+#time{font-variant-numeric:tabular-nums;color:var(--muted);min-width:90px;text-align:right}
+.rec-badge{display:none;align-items:center;gap:6px;color:var(--accent);font-weight:700}
+.rec-badge.on{display:inline-flex}
+.rec-badge i{width:9px;height:9px;border-radius:50%;background:var(--accent);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.2}}
+.switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.switch input{display:none}
+.switch span{width:38px;height:22px;border-radius:99px;background:var(--line);position:relative;transition:.2s}
+.switch span:after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.switch input:checked+span{background:var(--accent)}
+.switch input:checked+span:after{left:19px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;transition:.3s;pointer-events:none;z-index:20}
+.toast.on{opacity:1}
+@media (max-width:860px){.app{grid-template-columns:1fr;height:auto}aside{max-height:none}.stagewrap{height:70vh}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">S<b>Movie</b>S</div>
+  <div class="tag">Turn text conversations into movies</div>
+  <span class="ver" title="App version">v1.1.0</span>
+  <div class="spacer"></div>
+  <label class="switch" title="Night mode">🌙 <input type="checkbox" id="night"><span></span></label>
+</header>
+<div class="app">
+<aside>
+  <div class="tabs">
+    <button class="on" data-tab="script">Script</button>
+    <button data-tab="style">Style</button>
+    <button data-tab="scene">Scene</button>
+    <button data-tab="export">Export</button>
+  </div>
+
+  <div class="pane on" id="tab-script">
+    <h3>Import</h3>
+    <textarea id="import-text" placeholder="Paste a chat here. Works with:
+• Name: message   (iMessage copy, generic)
+• [12/03/24, 10:15:32] Name: message   (WhatsApp export)
+• > my message  /  < their message
+Or load a WhatsApp .txt, Instagram .json or Twitter/X direct-messages.js file."></textarea>
+    <div class="row">
+      <button class="btn blue" id="parse-btn">Parse</button>
+      <label class="btn">📂 Load file<input type="file" id="chat-file" accept=".txt,.json,.js" hidden></label>
+      <button class="btn" id="sample-btn">Sample</button>
+    </div>
+    <div id="speakers-wrap" style="display:none">
+      <h3>People</h3>
+      <div class="hint">Tap a circle to add a profile photo. Tap “Me / Them” to choose who sends the right-side bubbles.</div>
+      <div class="people" id="speakers"></div>
+      <input type="file" id="avatar-file" accept="image/*" hidden>
+    </div>
+    <h3>Timeline</h3>
+    <div class="row">
+      <button class="btn sm" id="add-me">+ Me</button>
+      <button class="btn sm" id="add-them">+ Them</button>
+      <button class="btn sm" id="auto-time" title="Set delays from message length">⏱ Auto-time</button>
+      <button class="btn sm" id="clear-all">Clear</button>
+    </div>
+    <div class="hint">Drag ⋮⋮ to reorder. Delay = seconds before the message appears. Delays of 3s or more show a “…” bubble first.</div>
+    <div id="timeline"></div>
+  </div>
+
+  <div class="pane" id="tab-style">
+    <h3>Bubble style</h3>
+    <div class="styles" id="styles"></div>
+    <h3>Colours</h3>
+    <div class="row"><label>Me</label><input type="color" id="c-me-bg"><input type="color" id="c-me-fg"><span class="hint" style="margin:0">bubble / text</span></div>
+    <div class="row"><label>Them</label><input type="color" id="c-them-bg"><input type="color" id="c-them-fg"></div>
+    <h3>Text</h3>
+    <div class="row"><label>Font size</label><input type="range" id="font-size" min="24" max="90" value="46" class="grow"></div>
+    <div class="row"><label>Bubble width</label><input type="range" id="bubble-w" min="40" max="95" value="72" class="grow"></div>
+    <div class="row"><label>Spacing</label><input type="range" id="gap" min="0" max="40" value="10" class="grow"></div>
+    <div class="row"><label>Names</label><select id="show-names"><option value="auto">Auto (groups only)</option><option value="on">Always</option><option value="off">Never</option></select></div>
+    <div class="row"><label>Timestamps</label><select id="stamps"><option value="off">Off</option><option value="bubble">In each bubble</option><option value="center">Centred between messages</option></select></div>
+    <div class="row"><label>Profile photos</label><select id="avatar-mode"><option value="auto">Auto (by app style)</option><option value="them">Beside their messages</option><option value="all">Beside everyone’s</option><option value="header">Header only</option></select></div>
+  </div>
+
+  <div class="pane" id="tab-scene">
+    <h3>Background</h3>
+    <div class="row">
+      <button class="btn" id="green-btn" aria-pressed="false">Green screen</button>
+      <button class="btn" id="blue-btn" aria-pressed="false">Blue screen</button>
+    </div>
+    <div class="row">
+      <button class="btn" data-bg="phone">📱 Phone</button>
+      <button class="btn" data-bg="color">🎨 Colour</button>
+      <input type="color" id="bg-color" value="#101014">
+    </div>
+    <div class="row">
+      <label class="btn">🖼 Photo / video<input type="file" id="bg-file" accept="image/*,video/*" hidden></label>
+      <button class="btn" id="clear-bg" hidden>✕ Remove photo/video</button>
+      <label class="switch" title="Include background video sound"><input type="checkbox" id="bg-audio"><span></span>video sound</label>
+    </div>
+    <div class="row"><label>Frame</label><select id="aspect"><option value="9:16">9:16 Story / Reel / TikTok</option><option value="1:1">1:1 Square</option><option value="4:5">4:5 Portrait post</option><option value="16:9">16:9 YouTube</option></select></div>
+    <div class="row"><label class="switch"><input type="checkbox" id="chrome" checked><span></span>Phone header &amp; input bar</label></div>
+    <div class="row"><label>Contact name</label><input type="text" id="contact" value="Ted" class="grow"></div>
+    <h3>Chat layer</h3>
+    <div class="hint">Drag the chat on the preview to move it. Scroll or pinch over it to resize.</div>
+    <div class="row"><label>Size</label><input type="range" id="layer-scale" min="30" max="150" value="100" class="grow"></div>
+    <div class="row"><label>Width</label><input type="range" id="layer-w" min="30" max="100" value="100" class="grow"></div>
+    <div class="row"><label>Height</label><input type="range" id="layer-h" min="20" max="100" value="100" class="grow"></div>
+    <div class="row"><label>Panel</label><input type="range" id="panel-op" min="0" max="100" value="0" class="grow"><span class="hint" style="margin:0">backdrop</span></div>
+    <div class="row"><button class="btn sm" id="center-layer">Re-centre</button></div>
+  </div>
+
+  <div class="pane" id="tab-export">
+    <h3>Timing</h3>
+    <div class="row"><label>Lead-in</label><input type="number" id="lead" value="0.5" min="0" step="0.25" style="width:70px"><label style="min-width:0">Hold end</label><input type="number" id="tail" value="2" min="0" step="0.5" style="width:70px"></div>
+    <h3>Sound</h3>
+    <div class="row"><label class="switch"><input type="checkbox" id="snd" checked><span></span>Message sounds</label></div>
+    <div class="row"><label>Volume</label><input type="range" id="vol" min="0" max="100" value="60" class="grow"></div>
+    <div class="row"><label>Sound</label><select id="snd-type"><option value="boop">Boop</option><option value="pop">Pop</option><option value="ding">Ding</option><option value="swoosh">Swoosh</option></select><button class="btn sm" id="test-snd">▶ Test</button></div>
+    <h3>Video</h3>
+    <div class="row"><label>Quality</label><select id="res"><option value="1" selected>1080p</option><option value="0.667">720p</option><option value="0.5">540p</option></select></div>
+    <div class="row"><label>FPS</label><select id="fps"><option>30</option><option>60</option><option>24</option></select></div>
+    <button class="btn primary" id="export-btn" style="width:100%;justify-content:center;padding:12px">⬇ Export movie (with sound)</button>
+    <div class="hint" id="export-hint">Records in real time. Keep this tab visible while it records.</div>
+    <h3>GIF</h3>
+    <div class="row"><label>Width</label><select id="gif-w"><option value="360">360 px (small)</option><option value="480" selected>480 px</option><option value="720">720 px (large file)</option></select></div>
+    <div class="row"><label>FPS</label><select id="gif-fps"><option value="10">10</option><option value="15" selected>15</option><option value="20">20</option></select></div>
+    <button class="btn blue" id="gif-btn" style="width:100%;justify-content:center;padding:12px">⬇ Export GIF</button>
+    <div class="hint">GIFs have no sound. Built frame by frame, so it’s usually faster than real time.</div>
+  </div>
+</aside>
+
+<main>
+  <div class="toolbar">
+    <button class="btn blue" id="play-btn">▶ Play</button>
+    <button class="btn" id="restart-btn">⏮ Restart</button>
+    <span class="rec-badge" id="rec"><i></i>REC</span>
+    <div class="spacer"></div>
+    <button class="btn sm" id="clear-bg2" hidden>✕ Remove background</button>
+    <button class="btn sm" id="green-btn2" aria-pressed="false" title="Toggle green screen background">Green screen</button>
+  </div>
+  <div class="stagewrap"><canvas id="stage"></canvas></div>
+  <div class="transport">
+    <input type="range" id="scrub" min="0" max="1000" value="0">
+    <span id="time">0.0 / 0.0s</span>
+  </div>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+<script>/* gifenc 1.0.3 — MIT License, (c) Matt DesLauriers — https://github.com/mattdesl/gifenc */
+(function(){var X={signature:"GIF",version:"89a",trailer:59,extensionIntroducer:33,applicationExtensionLabel:255,graphicControlExtensionLabel:249,imageSeparator:44,signatureSize:3,versionSize:3,globalColorTableFlagMask:128,colorResolutionMask:112,sortFlagMask:8,globalColorTableSizeMask:7,applicationIdentifierSize:8,applicationAuthCodeSize:3,disposalMethodMask:28,userInputFlagMask:2,transparentColorFlagMask:1,localColorTableFlagMask:128,interlaceFlagMask:64,idSortFlagMask:32,localColorTableSizeMask:7};function F(t=256){let e=0,s=new Uint8Array(t);return{get buffer(){return s.buffer},reset(){e=0},bytesView(){return s.subarray(0,e)},bytes(){return s.slice(0,e)},writeByte(r){n(e+1),s[e]=r,e++},writeBytes(r,o=0,i=r.length){n(e+i);for(let c=0;c<i;c++)s[e++]=r[c+o]},writeBytesView(r,o=0,i=r.byteLength){n(e+i),s.set(r.subarray(o,o+i),e),e+=i}};function n(r){var o=s.length;if(o>=r)return;var i=1024*1024;r=Math.max(r,o*(o<i?2:1.125)>>>0),o!=0&&(r=Math.max(r,256));let c=s;s=new Uint8Array(r),e>0&&s.set(c.subarray(0,e),0)}}var O=12,J=5003,lt=[0,1,3,7,15,31,63,127,255,511,1023,2047,4095,8191,16383,32767,65535];function at(t,e,s,n,r=F(512),o=new Uint8Array(256),i=new Int32Array(J),c=new Int32Array(J)){let x=i.length,a=Math.max(2,n);o.fill(0),c.fill(0),i.fill(-1);let l=0,f=0,g=a+1,h=g,b=!1,w=h,_=(1<<w)-1,u=1<<g-1,k=u+1,B=u+2,p=0,A=s[0],z=0;for(let y=x;y<65536;y*=2)++z;z=8-z,r.writeByte(a),I(u);let d=s.length;for(let y=1;y<d;y++){t:{let m=s[y],v=(m<<O)+A,M=m<<z^A;if(i[M]===v){A=c[M];break t}let V=M===0?1:x-M;for(;i[M]>=0;)if(M-=V,M<0&&(M+=x),i[M]===v){A=c[M];break t}I(A),A=m,B<1<<O?(c[M]=B++,i[M]=v):(i.fill(-1),B=u+2,b=!0,I(u))}}return I(A),I(k),r.writeByte(0),r.bytesView();function I(y){for(l&=lt[f],f>0?l|=y<<f:l=y,f+=w;f>=8;)o[p++]=l&255,p>=254&&(r.writeByte(p),r.writeBytesView(o,0,p),p=0),l>>=8,f-=8;if((B>_||b)&&(b?(w=h,_=(1<<w)-1,b=!1):(++w,_=w===O?1<<w:(1<<w)-1)),y==k){for(;f>0;)o[p++]=l&255,p>=254&&(r.writeByte(p),r.writeBytesView(o,0,p),p=0),l>>=8,f-=8;p>0&&(r.writeByte(p),r.writeBytesView(o,0,p),p=0)}}}var $=at;function D(t,e,s){return t<<8&63488|e<<2&992|s>>3}function G(t,e,s,n){return t>>4|e&240|(s&240)<<4|(n&240)<<8}function j(t,e,s){return t>>4<<8|e&240|s>>4}function R(t,e,s){return t<e?e:t>s?s:t}function T(t){return t*t}function tt(t,e,s){var n=0,r=1e100;let o=t[e],i=o.cnt,c=o.ac,x=o.rc,a=o.gc,l=o.bc;for(var f=o.fw;f!=0;f=t[f].fw){let h=t[f],b=h.cnt,w=i*b/(i+b);if(!(w>=r)){var g=0;s&&(g+=w*T(h.ac-c),g>=r)||(g+=w*T(h.rc-x),!(g>=r)&&(g+=w*T(h.gc-a),!(g>=r)&&(g+=w*T(h.bc-l),!(g>=r)&&(r=g,n=f))))}}o.err=r,o.nn=n}function Q(){return{ac:0,rc:0,gc:0,bc:0,cnt:0,nn:0,fw:0,bk:0,tm:0,mtm:0,err:0}}function ut(t,e){let s=e==="rgb444"?4096:65536,n=new Array(s),r=t.length;if(e==="rgba4444")for(let o=0;o<r;++o){let i=t[o],c=i>>24&255,x=i>>16&255,a=i>>8&255,l=i&255,f=G(l,a,x,c),g=f in n?n[f]:n[f]=Q();g.rc+=l,g.gc+=a,g.bc+=x,g.ac+=c,g.cnt++}else if(e==="rgb444")for(let o=0;o<r;++o){let i=t[o],c=i>>16&255,x=i>>8&255,a=i&255,l=j(a,x,c),f=l in n?n[l]:n[l]=Q();f.rc+=a,f.gc+=x,f.bc+=c,f.cnt++}else for(let o=0;o<r;++o){let i=t[o],c=i>>16&255,x=i>>8&255,a=i&255,l=D(a,x,c),f=l in n?n[l]:n[l]=Q();f.rc+=a,f.gc+=x,f.bc+=c,f.cnt++}return n}function H(t,e,s={}){let{format:n="rgb565",clearAlpha:r=!0,clearAlphaColor:o=0,clearAlphaThreshold:i=0,oneBitAlpha:c=!1}=s;if(!t||!t.buffer)throw new Error("quantize() expected RGBA Uint8Array data");if(!(t instanceof Uint8Array)&&!(t instanceof Uint8ClampedArray))throw new Error("quantize() expected RGBA Uint8Array data");let x=new Uint32Array(t.buffer),a=s.useSqrt!==!1,l=n==="rgba4444",f=ut(x,n),g=f.length,h=g-1,b=new Uint32Array(g+1);for(var w=0,u=0;u<g;++u){let C=f[u];if(C!=null){var _=1/C.cnt;l&&(C.ac*=_),C.rc*=_,C.gc*=_,C.bc*=_,f[w++]=C}}T(e)/w<.022&&(a=!1);for(var u=0;u<w-1;++u)f[u].fw=u+1,f[u+1].bk=u,a&&(f[u].cnt=Math.sqrt(f[u].cnt));a&&(f[u].cnt=Math.sqrt(f[u].cnt));var k,B,p;for(u=0;u<w;++u){tt(f,u,!1);var A=f[u].err;for(B=++b[0];B>1&&(p=B>>1,!(f[k=b[p]].err<=A));B=p)b[B]=k;b[B]=u}var z=w-e;for(u=0;u<z;){for(var d;;){var I=b[1];if(d=f[I],d.tm>=d.mtm&&f[d.nn].mtm<=d.tm)break;d.mtm==h?I=b[1]=b[b[0]--]:(tt(f,I,!1),d.tm=u);var A=f[I].err;for(B=1;(p=B+B)<=b[0]&&(p<b[0]&&f[b[p]].err>f[b[p+1]].err&&p++,!(A<=f[k=b[p]].err));B=p)b[B]=k;b[B]=I}var y=f[d.nn],m=d.cnt,v=y.cnt,_=1/(m+v);l&&(d.ac=_*(m*d.ac+v*y.ac)),d.rc=_*(m*d.rc+v*y.rc),d.gc=_*(m*d.gc+v*y.gc),d.bc=_*(m*d.bc+v*y.bc),d.cnt+=y.cnt,d.mtm=++u,f[y.bk].fw=y.fw,f[y.fw].bk=y.bk,y.mtm=h}let M=[];var V=0;for(u=0;;++V){let L=R(Math.round(f[u].rc),0,255),C=R(Math.round(f[u].gc),0,255),Y=R(Math.round(f[u].bc),0,255),E=255;if(l){if(E=R(Math.round(f[u].ac),0,255),c){let st=typeof c=="number"?c:127;E=E<=st?0:255}r&&E<=i&&(L=C=Y=o,E=0)}let K=l?[L,C,Y,E]:[L,C,Y];if(xt(M,K)||M.push(K),(u=f[u].fw)==0)break}return M}function xt(t,e){for(let s=0;s<t.length;s++){let n=t[s],r=n[0]===e[0]&&n[1]===e[1]&&n[2]===e[2],o=n.length>=4&&e.length>=4?n[3]===e[3]:!0;if(r&&o)return!0}return!1}function U(t,e){var s=0,n;for(n=0;n<t.length;n++){let r=t[n]-e[n];s+=r*r}return s}function P(t,e){return e>1?Math.round(t/e)*e:t}function et(t,{roundRGB:e=5,roundAlpha:s=10,oneBitAlpha:n=null}={}){let r=new Uint32Array(t.buffer);for(let o=0;o<r.length;o++){let i=r[o],c=i>>24&255,x=i>>16&255,a=i>>8&255,l=i&255;if(c=P(c,s),n){let f=typeof n=="number"?n:127;c=c<=f?0:255}l=P(l,e),a=P(a,e),x=P(x,e),r[o]=c<<24|x<<16|a<<8|l<<0}}function nt(t,e,s="rgb565"){if(!t||!t.buffer)throw new Error("quantize() expected RGBA Uint8Array data");if(!(t instanceof Uint8Array)&&!(t instanceof Uint8ClampedArray))throw new Error("quantize() expected RGBA Uint8Array data");if(e.length>256)throw new Error("applyPalette() only works with 256 colors or less");let n=new Uint32Array(t.buffer),r=n.length,o=s==="rgb444"?4096:65536,i=new Uint8Array(r),c=new Array(o),x=s==="rgba4444";if(s==="rgba4444")for(let a=0;a<r;a++){let l=n[a],f=l>>24&255,g=l>>16&255,h=l>>8&255,b=l&255,w=G(b,h,g,f),_=w in c?c[w]:c[w]=gt(b,h,g,f,e);i[a]=_}else{let a=s==="rgb444"?j:D;for(let l=0;l<r;l++){let f=n[l],g=f>>16&255,h=f>>8&255,b=f&255,w=a(b,h,g),_=w in c?c[w]:c[w]=bt(b,h,g,e);i[l]=_}}return i}function gt(t,e,s,n,r){let o=0,i=1e100;for(let c=0;c<r.length;c++){let x=r[c],a=x[3],l=q(a-n);if(l>i)continue;let f=x[0];if(l+=q(f-t),l>i)continue;let g=x[1];if(l+=q(g-e),l>i)continue;let h=x[2];l+=q(h-s),!(l>i)&&(i=l,o=c)}return o}function bt(t,e,s,n){let r=0,o=1e100;for(let i=0;i<n.length;i++){let c=n[i],x=c[0],a=q(x-t);if(a>o)continue;let l=c[1];if(a+=q(l-e),a>o)continue;let f=c[2];a+=q(f-s),!(a>o)&&(o=a,r=i)}return r}function rt(t,e,s=5){if(!t.length||!e.length)return;let n=t.map(i=>i.slice(0,3)),r=s*s,o=t[0].length;for(let i=0;i<e.length;i++){let c=e[i];c.length<o?c=[c[0],c[1],c[2],255]:c.length>o?c=c.slice(0,3):c=c.slice();let x=N(n,c.slice(0,3),U),a=x[0],l=x[1];l>0&&l<=r&&(t[a]=c)}}function q(t){return t*t}function W(t,e,s=U){let n=Infinity,r=-1;for(let o=0;o<t.length;o++){let i=t[o],c=s(e,i);c<n&&(n=c,r=o)}return r}function N(t,e,s=U){let n=Infinity,r=-1;for(let o=0;o<t.length;o++){let i=t[o],c=s(e,i);c<n&&(n=c,r=o)}return[r,n]}function ot(t,e,s=U){return t[W(t,e,s)]}function ct(t={}){let{initialCapacity:e=4096,auto:s=!0}=t,n=F(e),r=5003,o=new Uint8Array(256),i=new Int32Array(r),c=new Int32Array(r),x=!1;return{reset(){n.reset(),x=!1},finish(){n.writeByte(X.trailer)},bytes(){return n.bytes()},bytesView(){return n.bytesView()},get buffer(){return n.buffer},get stream(){return n},writeHeader:a,writeFrame(l,f,g,h={}){let{transparent:b=!1,transparentIndex:w=0,delay:_=0,palette:u=null,repeat:k=0,colorDepth:B=8,dispose:p=-1}=h,A=!1;if(s?x||(A=!0,a(),x=!0):A=Boolean(h.first),f=Math.max(0,Math.floor(f)),g=Math.max(0,Math.floor(g)),A){if(!u)throw new Error("First frame must include a { palette } option");pt(n,f,g,u,B),it(n,u),k>=0&&dt(n,k)}let z=Math.round(_/10);wt(n,p,z,b,w);let d=Boolean(u)&&!A;ht(n,f,g,d?u:null),d&&it(n,u),yt(n,l,f,g,B,o,i,c)}};function a(){ft(n,"GIF89a")}}function wt(t,e,s,n,r){t.writeByte(33),t.writeByte(249),t.writeByte(4),r<0&&(r=0,n=!1);var o,i;n?(o=1,i=2):(o=0,i=0),e>=0&&(i=e&7),i<<=2;let c=0;t.writeByte(0|i|c|o),S(t,s),t.writeByte(r||0),t.writeByte(0)}function pt(t,e,s,n,r=8){let o=1,i=0,c=Z(n.length)-1,x=o<<7|r-1<<4|i<<3|c,a=0,l=0;S(t,e),S(t,s),t.writeBytes([x,a,l])}function dt(t,e){t.writeByte(33),t.writeByte(255),t.writeByte(11),ft(t,"NETSCAPE2.0"),t.writeByte(3),t.writeByte(1),S(t,e),t.writeByte(0)}function it(t,e){let s=1<<Z(e.length);for(let n=0;n<s;n++){let r=[0,0,0];n<e.length&&(r=e[n]),t.writeByte(r[0]),t.writeByte(r[1]),t.writeByte(r[2])}}function ht(t,e,s,n){if(t.writeByte(44),S(t,0),S(t,0),S(t,e),S(t,s),n){let r=0,o=0,i=Z(n.length)-1;t.writeByte(128|r|o|0|i)}else t.writeByte(0)}function yt(t,e,s,n,r=8,o,i,c){$(s,n,e,r,t,o,i,c)}function S(t,e){t.writeByte(e&255),t.writeByte(e>>8&255)}function ft(t,e){for(var s=0;s<e.length;s++)t.writeByte(e.charCodeAt(s))}function Z(t){return Math.max(Math.ceil(Math.log2(t)),1)}var Bt=ct;window.gifenc={GIFEncoder:ct,applyPalette:nt,quantize:H};})();</script>
+<script>
+// ================= STATE =================
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const STYLES = {
+  imessage:{name:'iMessage', meBg:'#0a84ff', meFg:'#ffffff', themBg:'#e9e9eb', themFg:'#000000', themBgD:'#26252a', themFgD:'#ffffff', r:0.9, tail:'imessage', font:'-apple-system,"SF Pro Text",Helvetica,Arial,sans-serif', chat:'#ffffff', chatD:'#000000', bar:'iMessage'},
+  sms:{name:'SMS', meBg:'#34c759', meFg:'#ffffff', themBg:'#e9e9eb', themFg:'#000000', themBgD:'#26252a', themFgD:'#ffffff', r:0.9, tail:'imessage', font:'-apple-system,Helvetica,Arial,sans-serif', chat:'#ffffff', chatD:'#000000', bar:'Text Message'},
+  whatsapp:{name:'WhatsApp', meBg:'#d9fdd3', meFg:'#111b21', themBg:'#ffffff', themFg:'#111b21', meBgD:'#005c4b', meFgD:'#e9edef', themBgD:'#202c33', themFgD:'#e9edef', r:0.35, tail:'corner', font:'Helvetica,Arial,sans-serif', chat:'#efeae2', chatD:'#0b141a', bar:'Message', ticks:true},
+  messenger:{name:'Messenger', meBg:'#a033ff', meFg:'#ffffff', themBg:'#f0f0f0', themFg:'#050505', themBgD:'#303030', themFgD:'#e4e6eb', r:1, tail:'none', font:'Helvetica,Arial,sans-serif', chat:'#ffffff', chatD:'#000000', bar:'Aa', gradient:['#0099ff','#a033ff','#ff5280']},
+  instagram:{name:'Instagram', meBg:'#6f3cf5', meFg:'#ffffff', themBg:'#efefef', themFg:'#000000', themBgD:'#262626', themFgD:'#f5f5f5', r:1, tail:'none', font:'Helvetica,Arial,sans-serif', chat:'#ffffff', chatD:'#000000', bar:'Message...', gradient:['#4f5bd5','#962fbf','#d62976']},
+  x:{name:'X / Twitter', meBg:'#1d9bf0', meFg:'#ffffff', themBg:'#eff3f4', themFg:'#0f1419', themBgD:'#2f3336', themFgD:'#e7e9ea', r:0.9, tail:'flat', font:'Helvetica,Arial,sans-serif', chat:'#ffffff', chatD:'#000000', bar:'Start a message'},
+  android:{name:'Android', meBg:'#d3e3fd', meFg:'#041e49', themBg:'#f2f2f2', themFg:'#1f1f1f', meBgD:'#004a77', meFgD:'#c2e7ff', themBgD:'#303030', themFgD:'#e3e3e3', r:0.9, tail:'flat', font:'Roboto,Helvetica,Arial,sans-serif', chat:'#ffffff', chatD:'#1f1f1f', bar:'RCS message'},
+  telegram:{name:'Telegram', meBg:'#effdde', meFg:'#000000', themBg:'#ffffff', themFg:'#000000', meBgD:'#2b5278', meFgD:'#ffffff', themBgD:'#182533', themFgD:'#ffffff', r:0.55, tail:'imessage', font:'Helvetica,Arial,sans-serif', chat:'#a8c7a0', chatD:'#0e1621', bar:'Message', ticks:true},
+  signal:{name:'Signal', meBg:'#2c6bed', meFg:'#ffffff', themBg:'#e9e9e9', themFg:'#1b1b1b', themBgD:'#3b3b3b', themFgD:'#e9e9e9', r:0.8, tail:'none', font:'Inter,-apple-system,Helvetica,Arial,sans-serif', chat:'#ffffff', chatD:'#121212', bar:'Signal message'},
+  comic:{name:'Comic', meBg:'#ffe14d', meFg:'#111111', themBg:'#ffffff', themFg:'#111111', r:0.6, tail:'imessage', font:'"Comic Sans MS","Chalkboard SE","Marker Felt",cursive', chat:'#fff7d6', chatD:'#1a1a1a', bar:'Say something…', outline:'#111111'},
+};
+const S = {
+  msgs: [], meNames: new Set(), style:'imessage',
+  colors:{}, fontSize:46, bubbleW:72, gap:10, showNames:'auto', avatars:{}, avatarMode:'auto', stamps:'off',
+  bg:{type:'phone', color:'#101014', img:null, video:null},
+  aspect:'9:16', chrome:true, contact:'Ted', contactAuto:true,
+  layer:{x:0.5, y:0.5, scale:1, w:1, h:1, panel:0},
+  typingTh:3, typingWho:'all', lead:0.5, tail:2,
+  sound:true, vol:0.6, sndType:'boop', dark:false,
+};
+let uid = 1;
+let W = 1080, H = 1920; // logical canvas size; short side is always 1080
+const stage = $('#stage'); const ctx = stage.getContext('2d');
+const isDark = () => S.dark;
+function palette(){
+  const st = STYLES[S.style], d = isDark(), c = S.colors;
+  return {
+    meBg: c.meBg || (d && st.meBgD) || st.meBg, meFg: c.meFg || (d && st.meFgD) || st.meFg,
+    themBg: c.themBg || (d && st.themBgD) || st.themBg, themFg: c.themFg || (d && st.themFgD) || st.themFg,
+    chat: d ? st.chatD : st.chat, st,
+  };
+}
+
+// ================= AUDIO =================
+// One shared AudioContext (browsers cap how many you can create, and a new
+// context created outside a click starts "suspended" — that's why the old
+// version skipped boops). Sounds go to the speakers AND a recording stream.
+let AC = null, master = null, recDest = null, bgSrcNode = null;
+function audio(){
+  if (!AC){
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = S.vol;
+    master.connect(AC.destination);
+    recDest = AC.createMediaStreamDestination();
+    master.connect(recDest);
+  }
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function tone(t0, f0, f1, dur, type='sine', peak=0.5){
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type; o.frequency.setValueAtTime(f0, t0);
+  if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(peak, t0 + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + dur + 0.02);
+}
+function playSound(who, kind){
+  if (!S.sound || !AC) return;
+  const t = AC.currentTime + 0.005, me = who === 'me';
+  if (kind === 'typing'){ tone(t, 1400, 1400, 0.03, 'triangle', 0.08); return; }
+  switch (S.sndType){
+    case 'pop':   tone(t, me?500:420, me?1100:900, 0.09, 'sine', 0.6); break;
+    case 'ding':  tone(t, me?1320:1046, me?1320:1046, 0.35, 'sine', 0.35); tone(t, me?2640:2092, me?2640:2092, 0.2, 'sine', 0.1); break;
+    case 'swoosh':
+      if (me){ const n = noise(0.18); const f = AC.createBiquadFilter(); f.type='bandpass'; f.frequency.setValueAtTime(600,t); f.frequency.exponentialRampToValueAtTime(4000,t+0.18); const g=AC.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.5,t+0.05); g.gain.exponentialRampToValueAtTime(0.0001,t+0.18); n.connect(f); f.connect(g); g.connect(master); n.start(t); }
+      else { tone(t, 880, 880, 0.12, 'sine', 0.35); tone(t+0.1, 1175, 1175, 0.18, 'sine', 0.3); }
+      break;
+    default: tone(t, me?700:560, me?520:760, 0.12, 'sine', 0.5);
+  }
+}
+function noise(dur){
+  const b = AC.createBuffer(1, AC.sampleRate*dur, AC.sampleRate), d = b.getChannelData(0);
+  for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+  const s = AC.createBufferSource(); s.buffer = b; return s;
+}
+// ================= IMPORT =================
+const WA_RE = /^‎?\[?(\d{1,4}[\/.\-]\d{1,2}[\/.\-]\d{1,4}),?\s+(\d{1,2}:\d{2}(?::\d{2})?(?:\s?[APap]\.?[Mm]\.?)?)\]?\s*(?:-\s*)?([^:]{1,40}):\s?(.*)$/;
+const NAME_RE = /^([^:\n]{1,32}):\s+(.+)$/;
+const SKIP_RE = /(end-to-end encrypted|<Media omitted>|image omitted|video omitted|sticker omitted|Messages and calls are|This message was deleted|created group|added you|changed the subject)/i;
+
+function parseText(text){
+  const out = []; const lines = text.replace(/\r/g,'').split('\n');
+  // iMessage-exporter style: "Mar 12, 2024 10:15:32 AM" / sender / text
+  const IMX_DATE = /^[A-Z][a-z]{2} \d{1,2}, \d{4}\s+\d{1,2}:\d{2}:\d{2}\s?[AP]M/;
+  if (lines.filter(l => IMX_DATE.test(l)).length >= 2){
+    for (let i=0;i<lines.length;i++){
+      if (IMX_DATE.test(lines[i]) && lines[i+1] !== undefined){
+        const who = lines[i+1].trim(); let j = i+2, body = [];
+        while (j < lines.length && lines[j].trim() !== '' && !IMX_DATE.test(lines[j])) body.push(lines[j++]);
+        const dm = lines[i].match(/^([A-Z][a-z]{2} \d{1,2}, \d{4})\s+(\d{1,2}:\d{2}:\d{2}\s?[AP]M)/);
+        if (body.length) out.push({name: who === 'Me' ? 'Me' : who, text: body.join('\n'), date: dm && dm[1], time: dm && dm[2]});
+        i = j-1;
+      }
+    }
+    return out;
+  }
+  let last = null, lastName = null;
+  for (let raw of lines){
+    const line = raw.trim();
+    if (!line) { last = null; continue; }
+    let m;
+    if ((m = line.match(WA_RE))){ lastName = m[3].trim(); last = {name:lastName, text:m[4], date:m[1], time:m[2]}; if (!SKIP_RE.test(m[4])) out.push(last); else last = null; continue; }
+    if (/^[>›»]\s?/.test(line)){ last = {name:'Me', text:line.replace(/^[>›»]\s?/,'')}; out.push(last); lastName='Me'; continue; }
+    if (/^[<‹«]\s?/.test(line)){ last = {name:'Them', text:line.replace(/^[<‹«]\s?/,'')}; out.push(last); lastName='Them'; continue; }
+    if ((m = line.match(NAME_RE)) && !/^https?$/i.test(m[1])){ lastName = m[1].replace(/^\W*(\d{1,2}:\d{2}\s?(AM|PM)?)?\s*/i,'').trim() || m[1].trim(); last = {name:lastName, text:m[2]}; out.push(last); continue; }
+    if (SKIP_RE.test(line)) continue;
+    // continuation line: new bubble from same speaker (feels natural in chats)
+    out.push({name: lastName || 'Them', text: line});
+  }
+  return out;
+}
+function fixMojibake(s){ try { return decodeURIComponent(escape(s)); } catch { return s; } }
+function parseJSON(text){
+  // Twitter/X archive: window.YTD.direct_messages.part0 = [...]
+  let src = text.trim(); if (src.startsWith('window.')) src = src.slice(src.indexOf('=') + 1);
+  let data; try { data = JSON.parse(src); } catch { return null; }
+  // Instagram / Facebook messages export
+  if (data && Array.isArray(data.messages) && data.participants){
+    return data.messages.filter(m => m.content).sort((a,b)=>a.timestamp_ms-b.timestamp_ms)
+      .map(m => ({name: fixMojibake(m.sender_name), text: fixMojibake(m.content), ts:m.timestamp_ms}));
+  }
+  if (Array.isArray(data) && data[0] && data[0].dmConversation){
+    const conv = data[0].dmConversation;
+    const msgs = conv.messages.map(m => m.messageCreate).filter(Boolean).reverse();
+    return msgs.map(m => ({name: '@'+m.senderId, text: m.text, ts: Date.parse(m.createdAt)}));
+  }
+  if (Array.isArray(data)) return data.map(m => ({name: m.name||m.sender||m.from||'Them', text: m.text||m.message||m.content||''})).filter(m=>m.text);
+  return null;
+}
+function autoDelay(text){ return Math.round(Math.min(5, Math.max(1, 0.7 + text.length * 0.045)) * 2) / 2; }
+function loadParsed(list){
+  if (!list || !list.length){ toast('Couldn’t find any messages in that'); return; }
+  const names = [...new Set(list.map(m => m.name))];
+  // guess "me": explicit "Me"/"You", otherwise keep previous choice, else first speaker
+  const prev = [...S.meNames].filter(n => names.includes(n));
+  S.meNames = new Set(prev.length ? prev : names.filter(n => /^(me|you|i)$/i.test(n)));
+  if (!S.meNames.size && names.length > 1) S.meNames.add(names[0]);
+  const others = names.filter(n => !S.meNames.has(n) && !/^them$/i.test(n));
+  if (others.length === 1) { S.contact = others[0]; $('#contact').value = others[0]; }
+  if (others.length > 1) { S.contact = others.map(n => n.replace(/^@/, '').split(/\s+/)[0]).join(', '); $('#contact').value = S.contact; }
+  S.msgs = list.map(m => ({id:uid++, name:m.name, text:m.text.trim(), delay:autoDelay(m.text),
+    time: m.time || (m.ts ? new Date(m.ts).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : null),
+    date: m.date || (m.ts ? new Date(m.ts).toISOString().slice(0, 10) : null)}));
+  if (S.msgs.some(m => m.time) && S.stamps === 'off') setTimeout(() => toast('Timestamps found — show them from the Style tab'), 2700);
+  invalidate(); renderSpeakers(); renderTimeline(); restart();
+  toast(`Imported ${S.msgs.length} messages`);
+}
+let avatarTarget = null;
+function initials(n){ return (n || '?').replace(/^@/, '').split(/\s+/).map(w => w.replace(/[^\p{L}\p{N}]/gu,'').slice(0,1)).join('').slice(0,2).toUpperCase() || '?'; }
+function renderSpeakers(){
+  const names = [...new Set(S.msgs.map(m => m.name))];
+  $('#speakers-wrap').style.display = names.length ? '' : 'none';
+  $('#speakers').innerHTML = '';
+  names.forEach(n => {
+    const row = document.createElement('div'); row.className = 'person';
+    const img = S.avatars[n], me = S.meNames.has(n) || n === 'Me';
+    row.innerHTML = `<button class="avatar-btn${img ? ' has' : ''}" title="${img ? 'Change' : 'Add'} photo for ${esc(n)}">${esc(initials(n))}</button>
+      <span class="pname"></span>${img ? '<button class="x" title="Remove photo">×</button>' : ''}
+      <button class="side-toggle${me ? ' me' : ''}">${me ? 'Me' : 'Them'}</button>`;
+    row.querySelector('.pname').textContent = n;
+    if (img) row.querySelector('.avatar-btn').style.backgroundImage = `url("${img.src}")`;
+    row.querySelector('.avatar-btn').onclick = () => { avatarTarget = n; $('#avatar-file').click(); };
+    const x = row.querySelector('.x'); if (x) x.onclick = () => { URL.revokeObjectURL(img.src); delete S.avatars[n]; renderSpeakers(); };
+    row.querySelector('.side-toggle').onclick = () => { if (n === 'Me') return; S.meNames.has(n) ? S.meNames.delete(n) : S.meNames.add(n); renderSpeakers(); renderTimeline(); invalidate(); };
+    $('#speakers').appendChild(row);
+  });
+  if (S.contactAuto) $('#contact').value = contactName();
+}
+$('#avatar-file').onchange = e => {
+  const f = e.target.files[0], n = avatarTarget; e.target.value = ''; if (!f || !n) return;
+  const img = new Image();
+  img.onload = () => trimTransparent(img).then(im => { if (S.avatars[n]) URL.revokeObjectURL(S.avatars[n].src); S.avatars[n] = im; renderSpeakers(); toast(`Photo added for ${n}`); });
+  img.onerror = () => toast('That file couldn\u2019t be read as an image');
+  img.src = URL.createObjectURL(f);
+};
+function drawAvatar(c, name, cx, cy, size, font){
+  const img = S.avatars[name], r = size / 2;
+  c.save(); c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.clip();
+  if (img){ const s = Math.max(size / img.naturalWidth, size / img.naturalHeight), w = img.naturalWidth * s, h = img.naturalHeight * s;
+    c.drawImage(img, cx - w/2, cy - h/2, w, h); }
+  else { const g = c.createLinearGradient(0, cy - r, 0, cy + r); g.addColorStop(0, '#a5abb8'); g.addColorStop(1, '#858994');
+    c.fillStyle = g; c.fillRect(cx - r, cy - r, size, size);
+    c.fillStyle = '#fff'; c.font = `600 ${size * 0.4}px ${font}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(initials(name), cx, cy + size * 0.03); }
+  c.restore();
+}
+function contactName(){
+  const others = [...new Set(S.msgs.filter(m => !isMe(m)).map(m => m.name))];
+  if (!S.contactAuto || !others.length) return S.contact || 'Contact';
+  return others.length === 1 ? others[0] : others.map(n => n.replace(/^@/, '').split(/\s+/)[0]).join(', ');
+}
+function headerPerson(){
+  const cn = contactName(); if (S.avatars[cn]) return cn;
+  const others = [...new Set(S.msgs.filter(m => !isMe(m)).map(m => m.name))];
+  return others.length === 1 ? others[0] : cn;
+}
+const isMe = m => m.name === 'Me' || S.meNames.has(m.name);
+function fmtTime(t){
+  if (!t) return '';
+  const m = String(t).match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp])?\.?\s*[Mm]?\.?/);
+  if (!m) return String(t);
+  return m[3] ? `${+m[1]}:${m[2]} ${m[3].toUpperCase()}M` : `${m[1].padStart(2, '0')}:${m[2]}`;
+}
+function timeMinutes(t){
+  const m = String(t || '').match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp])?/); if (!m) return null;
+  let h = +m[1] % (m[3] ? 12 : 24); if (m[3] && /p/i.test(m[3])) h += 12; return h * 60 + +m[2];
+}
+function fmtDate(d){
+  if (!d) return '';
+  let dt = null, iso = String(d).match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/);
+  if (iso) dt = new Date(+iso[1], iso[2] - 1, +iso[3]);
+  else if (/[A-Za-z]/.test(d)) dt = new Date(d);
+  if (!dt || isNaN(dt)) return String(d);
+  return dt.toLocaleDateString(undefined, {weekday:'short', month:'short', day:'numeric'});
+}
+// ================= TIMELINE UI =================
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let dragId = null;
+function renderTimeline(){
+  const tl = $('#timeline'); tl.innerHTML = '';
+  S.msgs.forEach((m, i) => {
+    const me = isMe(m);
+    const r = document.createElement('div');
+    r.className = 'msg-row'; r.dataset.id = m.id; r.draggable = false;
+    r.innerHTML = `<div class="grip" title="Drag to reorder">⋮⋮</div>
+      <button class="who ${me?'me':'them'}" title="Switch side">${me?'ME':'TH'}</button>
+      <div><div class="nm">${esc(m.name)}${m.time ? ' · ' + esc(fmtTime(m.time)) : ''}</div><textarea class="txt" rows="1">${esc(m.text)}</textarea></div>
+      <div class="dlcol"><div class="dl"><input type="number" min="0" step="0.5" value="${m.delay}" title="Delay before this message (s)">s</div>
+        <div class="tools"><button class="tbtn goto" title="Go to this message in the preview">▶ Go to</button><button class="tbtn hide" title="Hide or show this message">${m.hidden ? '👁‍🗨 Show' : '👁 Hide'}</button></div></div>
+      <button class="x" title="Delete">×</button>`;
+    if (m.hidden) r.classList.add('hidden-msg');
+    r.querySelector('.goto').onclick = () => gotoMsg(m, false);
+    r.querySelector('.hide').onclick = () => { m.hidden = !m.hidden; invalidate(); renderTimeline(); toast(m.hidden ? 'Message hidden from the movie' : 'Message shown'); };
+    const grip = r.querySelector('.grip');
+    grip.onmousedown = grip.ontouchstart = () => r.draggable = true;
+    r.ondragstart = e => { dragId = m.id; r.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', ''); };
+    r.ondragend = () => { r.draggable = false; r.classList.remove('dragging'); $$('.msg-row').forEach(x=>x.classList.remove('over')); };
+    r.ondragover = e => { e.preventDefault(); r.classList.add('over'); };
+    r.ondragleave = () => r.classList.remove('over');
+    r.ondrop = e => { e.preventDefault(); if (dragId == null || dragId === m.id) return;
+      const from = S.msgs.findIndex(x => x.id === dragId); const [it] = S.msgs.splice(from, 1);
+      S.msgs.splice(S.msgs.findIndex(x => x.id === m.id), 0, it); dragId = null; renderTimeline(); invalidate(); };
+    r.querySelector('.who').onclick = () => {
+      if (isMe(m)) { m.name = [...new Set(S.msgs.filter(x=>!isMe(x)).map(x=>x.name))][0] || S.contact || 'Them'; }
+      else { m.name = [...S.meNames][0] || 'Me'; }
+      renderSpeakers(); renderTimeline(); invalidate();
+    };
+    const ta = r.querySelector('.txt');
+    const fit = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; };
+    ta.oninput = () => { m.text = ta.value; fit(); invalidate(); };
+    ta.onfocus = () => gotoMsg(m, true);
+    wrapField(ta, () => { m.text = ''; invalidate(); });
+    requestAnimationFrame(fit);
+    r.querySelector('.dl input').oninput = e => { m.delay = Math.max(0, parseFloat(e.target.value) || 0); invalidate(); };
+    r.querySelector('.x').onclick = () => { S.msgs.splice(i, 1); renderSpeakers(); renderTimeline(); invalidate(); };
+    tl.appendChild(r);
+  });
+}
+function addMsg(me){
+  const name = me ? ([...S.meNames][0] || 'Me') : (S.contact || 'Them');
+  if (me && name === 'Me') {} else if (me) S.meNames.add(name);
+  S.msgs.push({id:uid++, name, text: me ? 'New message' : 'Reply', delay:1.5});
+  renderSpeakers(); renderTimeline(); invalidate();
+  const rows = $$('.msg-row .txt'); const last = rows[rows.length-1]; last && (last.focus(), last.select());
+}
+function highlightRow(idx){
+  $$('.msg-row').forEach((r,i) => r.classList.toggle('active', i === idx));
+}
+// ================= SCHEDULE =================
+let sched = null;
+function invalidate(){ sched = null; }
+function schedule(){
+  if (sched) return sched;
+  const ev = []; let t = S.lead;
+  S.msgs.forEach((m, i) => {
+    if (m.hidden) return;   // hidden messages are skipped in the movie
+    const prev = t; t += m.delay;
+    const me = isMe(m);
+    const typing = m.delay >= 3;   // slow messages get a "…" bubble first (same for everyone)
+    const tyStart = prev + Math.min(0.6, m.delay * 0.2);
+    ev.push({i, m, me, t, typing, tyStart});
+  });
+  sched = {ev, total: t + S.tail};
+  return sched;
+}
+
+// ================= TEXT LAYOUT =================
+const wrapCache = new Map();
+function wrap(text, font, maxW){
+  const key = font + '|' + maxW + '|' + text;
+  if (wrapCache.has(key)) return wrapCache.get(key);
+  ctx.font = font; const lines = []; let widest = 0;
+  for (const para of text.split('\n')){
+    let line = '';
+    for (const word of para.split(/(\s+)/)){
+      const test = line + word;
+      if (ctx.measureText(test).width > maxW && line.trim()){
+        lines.push(line.trimEnd()); line = word.trimStart();
+        // break very long words
+        while (ctx.measureText(line).width > maxW){ let k = line.length; while (k > 1 && ctx.measureText(line.slice(0,k)).width > maxW) k--; lines.push(line.slice(0,k)); line = line.slice(k); }
+      } else line = test;
+    }
+    lines.push(line.trimEnd());
+  }
+  for (const l of lines) widest = Math.max(widest, ctx.measureText(l).width);
+  const r = {lines, w: widest};
+  if (wrapCache.size > 3000) wrapCache.clear();
+  wrapCache.set(key, r); return r;
+}
+
+// ================= DRAW HELPERS =================
+function rrect(c, x, y, w, h, r){ // r = [tl,tr,br,bl]
+  const [a,b,d,e] = (Array.isArray(r) ? r : [r,r,r,r]).map(v => Math.min(v, w/2, h/2));
+  c.beginPath(); c.moveTo(x+a, y); c.lineTo(x+w-b, y); c.quadraticCurveTo(x+w, y, x+w, y+b);
+  c.lineTo(x+w, y+h-d); c.quadraticCurveTo(x+w, y+h, x+w-d, y+h); c.lineTo(x+e, y+h);
+  c.quadraticCurveTo(x, y+h, x, y+h-e); c.lineTo(x, y+a); c.quadraticCurveTo(x, y, x+a, y); c.closePath();
+}
+const ease = p => 1 - Math.pow(1 - Math.min(1, Math.max(0, p)), 3);
+const easeBack = p => { p = Math.min(1, Math.max(0, p)); const c = 1.6; return 1 + (c+1)*Math.pow(p-1,3) + c*Math.pow(p-1,2); };
+
+function drawBubble(c, b, pal, area){
+  const {x, y, w, h, me, first, last} = b, st = pal.st, k = S.fontSize / 46;
+  const R = Math.min(h/2, S.fontSize * 0.95 * st.r + 6*k), small = 8*k;
+  let radii = [R,R,R,R];
+  if (st.tail === 'flat' || st.tail === 'none'){
+    const inner = st.tail === 'none' ? small : R;
+    radii = me ? [R, first?R:inner, last? (st.tail==='flat'?small:R) : inner, R]
+               : [first?R:inner, R, R, last? (st.tail==='flat'?small:R) : inner];
+    if (st.tail === 'none'){ radii = me ? [R, first?R:small, last?R:small, R] : [first?R:small, R, R, last?R:small]; }
+  }
+  if (st.tail === 'corner' && first) radii = me ? [R, 0, R, R] : [0, R, R, R];
+  let fill = me ? pal.meBg : pal.themBg;
+  if (me && st.gradient && !S.colors.meBg){
+    const g = c.createLinearGradient(0, area.top, 0, area.bottom);
+    st.gradient.forEach((col, i) => g.addColorStop(i/(st.gradient.length-1), col)); fill = g;
+  }
+  c.fillStyle = fill;
+  rrect(c, x, y, w, h, radii); c.fill();
+  if (st.outline){ c.lineWidth = 3*k; c.strokeStyle = st.outline; c.stroke(); }
+  // tails
+  c.beginPath();
+  if (st.tail === 'imessage' && last){
+    if (me){ const X = x+w, Y = y+h; c.moveTo(X-18*k, Y-20*k); c.quadraticCurveTo(X-2*k, Y-2*k, X+12*k, Y); c.quadraticCurveTo(X-10*k, Y+2*k, X-26*k, Y-4*k); }
+    else   { const X = x,   Y = y+h; c.moveTo(X+18*k, Y-20*k); c.quadraticCurveTo(X+2*k, Y-2*k, X-12*k, Y); c.quadraticCurveTo(X+10*k, Y+2*k, X+26*k, Y-4*k); }
+    c.closePath(); c.fill(); if (st.outline) c.stroke();
+  } else if (st.tail === 'corner' && first){
+    if (me){ c.moveTo(x+w-2, y); c.lineTo(x+w+16*k, y); c.lineTo(x+w-2, y+20*k); }
+    else   { c.moveTo(x+2, y); c.lineTo(x-16*k, y); c.lineTo(x+2, y+20*k); }
+    c.closePath(); c.fill();
+  }
+}
+function drawTypingDots(c, x, y, w, h, t, color){
+  for (let i = 0; i < 3; i++){
+    const ph = (t * 3.2 - i * 0.35) % 1.4, a = ph < 0.7 ? Math.sin(ph / 0.7 * Math.PI) : 0;
+    c.globalAlpha = 0.35 + a * 0.65;
+    c.fillStyle = color;
+    c.beginPath(); c.arc(x + w/2 + (i-1) * h*0.34, y + h/2 - a*h*0.06, h*0.11, 0, Math.PI*2); c.fill();
+  }
+  c.globalAlpha = 1;
+}
+// ================= FRAME RENDER =================
+function coverDraw(c, src, sw, sh){
+  if (!sw || !sh) return;
+  const s = Math.max(W/sw, H/sh), dw = sw*s, dh = sh*s;
+  c.drawImage(src, (W-dw)/2, (H-dh)/2, dw, dh);
+}
+function layerRect(){
+  const L = S.layer, bw = W * L.w, bh = H * L.h, s = L.scale;
+  return {cx: L.x * W, cy: L.y * H, bw, bh, s, x: L.x*W - bw*s/2, y: L.y*H - bh*s/2, w: bw*s, h: bh*s};
+}
+function drawBackground(c, pal){
+  const b = S.bg;
+  if (b.type === 'green') c.fillStyle = '#00ff00';
+  else if (b.type === 'blue') c.fillStyle = '#0047bb';
+  else if (b.type === 'color') c.fillStyle = b.color;
+  else if (b.type === 'phone') c.fillStyle = pal.chat;
+  else c.fillStyle = '#000';
+  c.fillRect(0, 0, W, H);
+  if (b.type === 'image' && b.img) coverDraw(c, b.img, b.img.naturalWidth, b.img.naturalHeight);
+  if (b.type === 'video' && b.video && b.video.readyState >= 2) coverDraw(c, b.video, b.video.videoWidth, b.video.videoHeight);
+}
+function statusIcons(c, x, y, col, u){
+  c.fillStyle = col; c.strokeStyle = col;
+  for (let i = 0; i < 4; i++) c.fillRect(x + i*9*u, y + (3-i)*5*u, 6*u, (8 + i*5)*u);   // signal
+  const bx = x + 50*u; c.lineWidth = 2*u; rrect(c, bx, y, 44*u, 22*u, 6*u); c.stroke();
+  rrect(c, bx + 4*u, y + 4*u, 30*u, 14*u, 3*u); c.fill(); c.fillRect(bx + 46*u, y + 7*u, 3*u, 8*u);
+}
+function drawChrome(c, bw, bh, pal, typingText, caret, themTyping){
+  const st = pal.st, d = isDark(), u = bw / 1080 * 1.0;
+  const HEAD = 230*u, INPUT = 150*u;
+  const wa = S.style === 'whatsapp';
+  // header
+  c.fillStyle = wa ? (d ? '#202c33' : '#008069') : (d ? 'rgba(28,28,30,.96)' : 'rgba(246,246,248,.96)');
+  c.fillRect(0, 0, bw, HEAD);
+  const hcol = wa ? (d ? '#e9edef' : '#fff') : (d ? '#fff' : '#000');
+  c.fillStyle = hcol; c.font = `600 ${34*u}px ${st.font}`; c.textBaseline = 'middle'; c.textAlign = 'left';
+  c.fillText('9:41', 60*u, 45*u); statusIcons(c, bw - 150*u, 34*u, hcol, u);
+  const name = contactName(), init = name.replace(/[^\p{L}\p{N}]/gu,'').slice(0,1).toUpperCase() || '?';
+  const center = !wa && !['messenger', 'instagram', 'signal'].includes(S.style);
+  const av = 72*u, ax = center ? bw/2 : 110*u, ay = 125*u;
+  const hp = headerPerson(); if (S.avatars[hp]) drawAvatar(c, hp, ax, ay, av, st.font); else drawAvatar(c, name, ax, ay, av, st.font);
+  c.textBaseline = 'middle'; c.textAlign = 'center';
+  c.fillStyle = hcol;
+  if (center){ c.font = `500 ${26*u}px ${st.font}`; c.fillText(name + ' ›', bw/2, 195*u);
+    c.fillStyle = S.style==='sms'?'#34c759':'#0a84ff'; c.font = `${58*u}px ${st.font}`; c.textAlign = 'left'; c.fillText('‹', 30*u, 122*u); }
+  else { c.textAlign = 'left'; c.font = `600 ${36*u}px ${st.font}`; c.fillText(name, ax + 60*u, ay - 12*u);
+    c.globalAlpha = .7; c.font = `${24*u}px ${st.font}`; c.fillText(themTyping ? 'typing…' : 'online', ax + 60*u, ay + 24*u); c.globalAlpha = 1;
+    c.font = `${52*u}px ${st.font}`; c.fillText('‹', 26*u, ay); }
+  c.fillStyle = d ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.12)'; c.fillRect(0, HEAD-1, bw, 1);
+  // input bar
+  const iy = bh - INPUT;
+  c.fillStyle = d ? 'rgba(18,18,20,.96)' : 'rgba(246,246,248,.96)'; c.fillRect(0, iy, bw, INPUT);
+  const fx = 110*u, fw = bw - fx - 40*u, fh = 70*u, fy = iy + 30*u;
+  c.fillStyle = d ? '#1c1c1e' : '#fff'; c.strokeStyle = d ? '#3a3a3c' : '#d1d1d6'; c.lineWidth = 2*u;
+  rrect(c, fx, fy, fw, fh, fh/2); c.fill(); c.stroke();
+  c.fillStyle = d ? '#3a3a3c' : '#e5e5ea'; c.beginPath(); c.arc(60*u, fy + fh/2, 32*u, 0, 7); c.fill();
+  c.fillStyle = d ? '#aaa' : '#8e8e93'; c.font = `${44*u}px ${st.font}`; c.textAlign = 'center'; c.fillText('+', 60*u, fy + fh/2 + 2*u);
+  c.textAlign = 'left'; c.font = `${32*u}px ${st.font}`;
+  if (typingText){
+    c.fillStyle = d ? '#fff' : '#000';
+    let s = typingText.replace(/\n/g,' '); while (s.length > 1 && c.measureText(s).width > fw - 110*u) s = s.slice(1);
+    c.fillText(s + (caret ? '|' : ''), fx + 28*u, fy + fh/2 + 2*u);
+    c.fillStyle = pal.meBg === '#ffffff' ? '#0a84ff' : (st.gradient ? st.gradient[1] : pal.meBg);
+    c.beginPath(); c.arc(fx + fw - fh/2, fy + fh/2, fh/2 - 8*u, 0, 7); c.fill();
+    c.strokeStyle = '#fff'; c.lineWidth = 5*u; c.beginPath(); const sx = fx + fw - fh/2, sy = fy + fh/2;
+    c.moveTo(sx, sy + 12*u); c.lineTo(sx, sy - 12*u); c.moveTo(sx - 10*u, sy - 2*u); c.lineTo(sx, sy - 12*u); c.lineTo(sx + 10*u, sy - 2*u); c.stroke();
+  } else { c.fillStyle = d ? '#636366' : '#b0b0b6'; c.fillText(st.bar, fx + 28*u, fy + fh/2 + 2*u); }
+  return {HEAD, INPUT};
+}
+let gifBusy = false, RES = 1, hover = false, dragging = false, recording = false;
+function renderFrame(t){
+  const sc = schedule(), pal = palette(), st = pal.st, c = ctx;
+  c.setTransform(RES, 0, 0, RES, 0, 0);
+  drawBackground(c, pal);
+  const L = layerRect(), bw = L.bw, bh = L.bh;
+  c.save(); c.translate(L.x, L.y); c.scale(L.s, L.s);
+  const full = S.layer.w >= 0.999 && S.layer.h >= 0.999 && S.layer.scale === 1;
+  rrect(c, 0, 0, bw, bh, full ? 0 : 36 * bw/1080); c.clip();
+  if (S.chrome){ c.fillStyle = pal.chat; c.fillRect(0, 0, bw, bh); }
+  if (S.layer.panel > 0){ c.globalAlpha = S.layer.panel; c.fillStyle = pal.chat; c.fillRect(0, 0, bw, bh); c.globalAlpha = 1; }
+
+  // --- what is visible at time t
+  const shown = sc.ev.filter(e => e.t <= t);
+  const next = sc.ev.find(e => e.t > t);
+  let typingEv = next && next.typing && t >= next.tyStart ? next : null;
+  let inputText = null, caret = false;
+  if (false){   // input-bar typing removed
+    const span = Math.max(0.2, (typingEv.t - 0.3) - typingEv.tyStart), p = Math.min(1, (t - typingEv.tyStart) / span);
+    inputText = typingEv.m.text.slice(0, Math.ceil(typingEv.m.text.length * p)); caret = (t * 2 % 1) < 0.6; typingEv = null;
+  }
+  const u = bw / 1080, pad = 28 * u, fs = S.fontSize, lh = fs * 1.28;
+  const HEAD = S.chrome ? 230*u : 0, INPUT = S.chrome ? 150*u : 0;
+  const area = {top: HEAD + pad, bottom: bh - INPUT - pad};
+  const font = `${fs}px ${st.font}`, px = fs * 0.62, py = fs * 0.38;
+  const others = new Set(S.msgs.filter(m => !isMe(m)).map(m => m.name));
+  const am = S.avatarMode, avSize = fs * 1.35, avGap = 14 * u;
+  const avThem = am === 'them' || am === 'all' || (am === 'auto' && (S.style === 'messenger' || S.style === 'instagram' || others.size > 1));
+  const avMe = am === 'all';
+  const sideThem = 34 * u + (avThem ? avSize + avGap : 0), sideMe = 34 * u + (avMe ? avSize + avGap : 0), sideX = sideMe;
+  const maxW = bw * S.bubbleW / 100 - px*2 - (avThem || avMe ? avSize + avGap : 0);
+  const names = S.showNames === 'on' || (S.showNames === 'auto' && others.size > 1);
+
+  const tsFont = `${fs*0.5}px ${st.font}`, sepFont = `600 ${fs*0.5}px ${st.font}`;
+  const items = []; let prevDate = null, prevMin = null;
+  for (const e of shown){
+    const m = e.m, wr = wrap(m.text || ' ', font, maxW);
+    if (S.stamps === 'center' && m.time){
+      const mins = timeMinutes(m.time), newDay = m.date && m.date !== prevDate;
+      if (prevMin === null || newDay || (mins !== null && Math.abs(mins - prevMin) >= 30)){
+        const txt = (newDay || prevDate === null) && m.date ? `${fmtDate(m.date)} · ${fmtTime(m.time)}` : fmtTime(m.time);
+        items.push({sep:true, text:txt, h:fs*0.62, w:0, at:e.t, idx:e.i});
+      }
+      prevDate = m.date || prevDate; prevMin = mins;
+    }
+    const it = {me:e.me, name:m.name, lines:wr.lines, w:wr.w + px*2, h:wr.lines.length*lh + py*2, at:e.t, idx:e.i};
+    if (S.stamps === 'bubble' && m.time){
+      ctx.font = tsFont; const tt = fmtTime(m.time), tw = ctx.measureText(tt).width, gapT = fs*0.4;
+      ctx.font = font; const lastW = ctx.measureText(wr.lines[wr.lines.length-1]).width;
+      it.ts = tt; it.tsW = tw;
+      if (lastW + gapT + tw <= maxW) it.w = Math.max(it.w, lastW + gapT + tw + px*2);
+      else { it.h += fs*0.6; it.w = Math.max(it.w, tw + px*2); }
+    }
+    items.push(it);
+  }
+  if (typingEv) items.push({me:typingEv.me, name:typingEv.m.name, typing:true, w:fs*2.9, h:fs*1.95, at:typingEv.tyStart, idx:typingEv.i});
+  // grouping + heights
+  let total = 0;
+  items.forEach((it, k) => {
+    const pv = items[k-1], nx = items[k+1];
+    it.first = !pv || pv.sep || pv.me !== it.me || pv.name !== it.name;
+    it.last  = !nx || nx.sep || nx.me !== it.me || nx.name !== it.name;
+    it.label = names && !it.sep && !it.me && it.first ? it.name : null;
+    it.p = ease((t - it.at) / 0.28);
+    const gapBefore = k === 0 ? 0 : (it.sep ? S.gap*u + fs*0.7 : it.first ? S.gap*u + fs*0.5 : S.gap*u*0.35 + 3*u);
+    it.gapBefore = gapBefore; it.labelH = it.label ? fs*0.62 + 6*u : 0;
+    it.full = gapBefore + it.labelH + it.h; total += it.full * it.p;
+  });
+  const last = items[items.length-1];
+  const lastMe = [...items].reverse().find(i => !i.typing && !i.sep);
+  const receipt = (S.style === 'imessage' || S.style === 'sms') && lastMe && lastMe.me && lastMe === last ? fs*0.62 + 8*u : 0;
+  total += receipt * (last ? last.p : 0);
+  const areaH = area.bottom - area.top;
+  let y = area.top - Math.max(0, total - areaH);
+
+  c.save(); c.beginPath(); c.rect(0, HEAD, bw, bh - HEAD - INPUT); c.clip();
+  for (const it of items){
+    y += it.gapBefore * it.p;
+    if (it.sep){
+      c.globalAlpha = it.p; c.fillStyle = isDark() || (S.bg.type!=='phone' && !S.chrome) ? 'rgba(235,235,245,.65)' : 'rgba(60,60,67,.6)';
+      c.font = sepFont; c.textAlign = 'center'; c.textBaseline = 'top'; c.fillText(it.text, bw/2, y); c.globalAlpha = 1;
+      y += it.h * it.p; continue;
+    }
+    if (it.label){ c.globalAlpha = it.p; c.fillStyle = isDark() || (S.bg.type!=='phone' && !S.chrome) ? 'rgba(235,235,245,.7)' : 'rgba(60,60,67,.6)';
+      c.font = `${fs*0.58}px ${st.font}`; c.textBaseline = 'top'; c.textAlign = 'left'; c.fillText(it.label, sideThem + fs*0.5, y); c.globalAlpha = 1; }
+    y += it.labelH * it.p;
+    const bx = it.me ? bw - sideMe - it.w : sideThem, by = y;
+    const pp = Math.min(1, Math.max(0, (t - it.at) / 0.32));
+    const s = 0.55 + 0.45 * easeBack(pp);
+    c.save(); c.globalAlpha = Math.min(1, pp * 2);
+    const ox = it.me ? bx + it.w : bx, oy = by + it.h;
+    c.translate(ox, oy); c.scale(s, s); c.translate(-ox, -oy);
+    const b = {x:bx, y:by, w:it.w, h:it.h, me:it.me, first:it.first, last:it.last};
+    drawBubble(c, b, pal, area);
+    if (it.typing) drawTypingDots(c, bx, by, it.w, it.h, t, it.me ? pal.meFg : pal.themFg);
+    else { c.fillStyle = it.me ? pal.meFg : pal.themFg; c.font = font; c.textBaseline = 'top'; c.textAlign = 'left';
+      it.lines.forEach((ln, j) => c.fillText(ln, bx + px, by + py + j*lh + fs*0.08));
+      if (it.ts){ c.globalAlpha *= 0.62; c.font = tsFont; c.textAlign = 'right'; c.textBaseline = 'alphabetic';
+        c.fillText(it.ts, bx + it.w - px*0.8, by + it.h - py*0.75); } }
+    c.restore();
+    if (it.last && (it.me ? avMe : avThem)){
+      c.save(); c.globalAlpha = Math.min(1, pp * 2);
+      const acx = it.me ? bw - 34*u - avSize/2 : 34*u + avSize/2;
+      drawAvatar(c, it.name, acx, by + it.h - avSize/2, avSize, st.font); c.restore();
+    }
+    y += it.h * it.p;
+  }
+  if (receipt && last){ c.globalAlpha = last.p; c.fillStyle = 'rgba(142,142,147,1)'; c.font = `600 ${fs*0.55}px ${st.font}`;
+    c.textAlign = 'right'; c.textBaseline = 'top'; c.fillText(t - last.at > 1.2 ? 'Read' : 'Delivered', bw - sideX - 6*u, y + 8*u); c.globalAlpha = 1; }
+  c.restore();
+  if (S.chrome) drawChrome(c, bw, bh, pal, inputText, caret, !!(typingEv && !typingEv.me));
+  c.restore();
+  if (!recording && !gifBusy && (hover || dragging) && !full){
+    c.save(); c.setLineDash([14, 10]); c.lineWidth = 4; c.strokeStyle = '#ff3b5c'; c.strokeRect(L.x, L.y, L.w, L.h); c.restore();
+  }
+  return shown.length ? shown[shown.length-1].i : -1;
+}
+// ================= PLAYBACK =================
+let playing = false, playT = 0, lastT = 0, startPerf = 0, startT = 0;
+const nowT = () => playing ? startT + (performance.now() - startPerf) / 1000 : playT;
+function play(){
+  audio();
+  const sc = schedule(); if (playT >= sc.total - 0.01) playT = 0;
+  startT = playT; lastT = playT; startPerf = performance.now(); playing = true;
+  syncVideo(true); $('#play-btn').textContent = '❚❚ Pause';
+}
+function pause(){ playT = nowT(); playing = false; syncVideo(false); $('#play-btn').textContent = '▶ Play'; }
+function restart(){ const was = playing; playing = false; playT = 0; lastT = 0; syncVideo(false, 0); if (was) play(); }
+function seek(t){ playT = t; lastT = t; if (playing){ startT = t; startPerf = performance.now(); } syncVideo(playing, t); }
+function gotoMsg(m, quiet){
+  const e = schedule().ev.find(x => x.m === m);
+  if (!e){ if (!quiet) toast('That message is hidden — click 👁 Show to bring it back'); return; }
+  if (!playing) seek(e.t + 0.4);
+}
+// Wrap a text box so an ✕ button clears it (works for textarea and input).
+function wrapField(el, onClear){
+  if (!el || el.parentNode.classList.contains('fieldwrap')) return;
+  const wrap = document.createElement('div'); wrap.className = 'fieldwrap';
+  if (el.classList.contains('grow')){ wrap.classList.add('grow'); el.classList.remove('grow'); wrap.style.minWidth = '0'; }
+  el.parentNode.insertBefore(wrap, el); wrap.appendChild(el);
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'clr'; b.title = 'Clear'; b.setAttribute('aria-label', 'Clear text'); b.textContent = '✕';
+  b.onclick = e => { e.preventDefault(); el.value = ''; el.dispatchEvent(new Event('input')); onClear && onClear(); el.focus(); };
+  wrap.appendChild(b);
+}
+// Give every slider a number box so an exact value can be typed in.
+function addNumberBoxes(){
+  document.querySelectorAll('input[type=range]').forEach(r => {
+    if (r.id === 'scrub') return;   // the playback bar is a position, not a setting
+    if (r.nextElementSibling && r.nextElementSibling.classList.contains('numfield')) return;
+    const n = document.createElement('input'); n.type = 'number'; n.className = 'numfield';
+    n.min = r.min; n.max = r.max; n.step = r.step || 1; n.value = r.value; n.title = 'Type an exact value';
+    r.after(n);
+    n.addEventListener('input', () => { if (n.value === '') return; r.value = n.value; r.dispatchEvent(new Event('input')); });
+  });
+  // Keep the number boxes matching sliders that the app moves itself (e.g. zooming the chat).
+  setInterval(() => document.querySelectorAll('input[type=range]').forEach(r => {
+    const n = r.nextElementSibling; if (n && n.classList.contains('numfield') && document.activeElement !== n && n.value != r.value) n.value = r.value;
+  }), 300);
+}
+// Trim a transparent image to its visible part, keeping a 24-pixel margin.
+function trimTransparent(img){
+  return new Promise(resolve => {
+    const w = img.naturalWidth, h = img.naturalHeight;
+    if (!w || !h) return resolve(img);
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const cx = c.getContext('2d', {willReadFrequently: true}); cx.drawImage(img, 0, 0);
+    const d = cx.getImageData(0, 0, w, h).data;
+    let x0 = w, y0 = h, x1 = -1, y1 = -1, hasAlpha = false;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+      const a = d[(y * w + x) * 4 + 3];
+      if (a < 255) hasAlpha = true;
+      if (a > 0){ if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    }
+    if (!hasAlpha || x1 < 0) return resolve(img);   // fully opaque, or empty: leave alone
+    const M = 24;
+    const sx = Math.max(0, x0 - M), sy = Math.max(0, y0 - M);
+    const sw = Math.min(w, x1 + M + 1) - sx, sh = Math.min(h, y1 + M + 1) - sy;
+    if (sw >= w && sh >= h) return resolve(img);   // already tight enough
+    const out = document.createElement('canvas'); out.width = sw; out.height = sh;
+    out.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+    out.toBlob(b => { const im = new Image(); im.onload = () => resolve(im); im.src = URL.createObjectURL(b); }, 'image/png');
+  });
+}
+// Export file name: YYYY-MM-DD SMovieS-[Shape]-[Resolution].[ext]
+function exportName(ext, res){
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  const date = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  const shape = {'9:16':'9x16 Story', '1:1':'1x1 Square', '4:5':'4x5 Portrait', '16:9':'16x9 Widescreen'}[S.aspect] || S.aspect.replace(':', 'x');
+  return `${date} SMovieS-${shape}-${res}.${ext}`;
+}
+function fireSounds(from, to){
+  for (const e of schedule().ev){
+    if (e.t > from && e.t <= to) playSound(e.me ? 'me' : 'them');
+    // soft key clicks while "me" types in the input bar
+    if (false){
+      const span = Math.max(0.2, (e.t - 0.3) - e.tyStart), n = e.m.text.length;
+      const a = Math.ceil(n * Math.min(1, Math.max(0, (from - e.tyStart) / span))), b = Math.ceil(n * Math.min(1, (to - e.tyStart) / span));
+      if (b > a && b % 2 === 0) playSound('me', 'typing');
+    }
+  }
+}
+function loop(){
+  const sc = schedule(); let t = nowT();
+  if (playing){ fireSounds(lastT, t); lastT = t;
+    if (t >= sc.total){ t = sc.total; playT = t; playing = false; syncVideo(false); $('#play-btn').textContent = '▶ Play'; if (recording) stopRecording(); } }
+  const idx = renderFrame(t);
+  $('#scrub').value = sc.total ? Math.round(t / sc.total * 1000) : 0;
+  $('#time').textContent = `${t.toFixed(1)} / ${sc.total.toFixed(1)}s`;
+  if (idx !== loop.idx){ loop.idx = idx; highlightRow(idx); }
+  requestAnimationFrame(loop);
+}
+// ================= BACKGROUND MEDIA =================
+let bgGain = null;
+function syncVideo(run, t){
+  const v = S.bg.type === 'video' && S.bg.video; if (!v) return;
+  if (t !== undefined && v.duration) v.currentTime = t % v.duration;
+  run ? v.play().catch(()=>{}) : v.pause();
+}
+function routeVideoAudio(){
+  const v = S.bg.video; if (!v) return;
+  audio();
+  if (!v._src){ v._src = AC.createMediaElementSource(v); bgGain = bgGain || AC.createGain(); bgGain.connect(AC.destination); bgGain.connect(recDest); v._src.connect(bgGain); }
+  v.muted = false; bgGain.gain.value = $('#bg-audio').checked ? 1 : 0;
+}
+function setBg(type){
+  S.bg.type = type;
+  if (S.bg.video){ type === 'video' ? syncVideo(playing, nowT()) : S.bg.video.pause(); }
+  updateBgUI();
+}
+function updateBgUI(){
+  const t = S.bg.type, hasMedia = !!(S.bg.img || S.bg.video);
+  [['#green-btn', 'green'], ['#green-btn2', 'green'], ['#blue-btn', 'blue']].forEach(([sel, k]) => {
+    const b = $(sel); if (!b) return; const on = t === k;
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+  });
+  $$('[data-bg]').forEach(b => b.classList.toggle('on', b.dataset.bg === t));
+  $('#clear-bg').hidden = $('#clear-bg2').hidden = !hasMedia;
+}
+function clearMedia(){
+  const v = S.bg.video;
+  if (v){ v.pause(); URL.revokeObjectURL(v.src); v.removeAttribute('src'); v.load(); }
+  if (S.bg.img) URL.revokeObjectURL(S.bg.img.src);
+  S.bg.video = null; S.bg.img = null; $('#bg-file').value = '';
+  if (S.bgPrev && (S.bgPrev.type === 'image' || S.bgPrev.type === 'video')) S.bgPrev = {type:'phone', chrome:true};
+  if (S.bg.type === 'image' || S.bg.type === 'video'){ S.chrome = true; $('#chrome').checked = true; setBg('phone'); }
+  else updateBgUI();
+  toast('Background removed');
+}
+// ================= EXPORT =================
+let recorder = null, chunks = [];
+function pickMime(){
+  const opts = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+  return opts.find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || '';
+}
+function startRecording(){
+  if (!S.msgs.length) return toast('Add some messages first');
+  if (!window.MediaRecorder || !stage.captureStream) return toast('This browser can’t record video — try Chrome, Edge or Safari');
+  audio(); hover = false;
+  const fps = +$('#fps').value, stream = stage.captureStream(fps);
+  recDest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));   // <- the missing piece: sound in the movie
+  const mime = pickMime();
+  recorder = new MediaRecorder(stream, {mimeType: mime || undefined, videoBitsPerSecond: Math.round(12e6 * RES), audioBitsPerSecond: 160000});
+  chunks = []; recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
+  recorder.onstop = () => {
+    const type = recorder.mimeType || mime || 'video/webm', ext = type.includes('mp4') ? 'mp4' : 'webm';
+    const resLabel = RES >= 1 ? '1080p' : RES > 0.6 ? '720p' : '540p';
+    saveMovie(new Blob(chunks, {type}), exportName(ext, resLabel), ext);
+  };
+  recording = true; $('#rec').classList.add('on'); $('#export-btn').textContent = '■ Stop recording';
+  playing = false; playT = 0; lastT = 0; syncVideo(false, 0);
+  recorder.start(250);
+  toast('Recording started — keep this tab open until the save finishes');
+  setTimeout(play, 120);   // let the recorder spin up so the first sound isn't clipped
+}
+async function saveMovie(blob, filename, ext){
+  let dl = null; try { dl = window.claude && await window.claude.use('downloads'); } catch {}
+  if (dl){
+    try { await dl.save({filename, data: blob}); toast(`Saved ${ext.toUpperCase()} — check your downloads`); }
+    catch (e){ toast(e && e.code === 'declined' ? 'Download cancelled' : 'Couldn\u2019t save the movie here — try exporting again'); }
+    return;
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove(); toast(`Saved ${ext.toUpperCase()} — check your downloads`);
+}
+function seekVideoTo(t){
+  const v = S.bg.type === 'video' && S.bg.video;
+  return new Promise(res => { if (!v || !v.duration) return res();
+    const done = () => { v.removeEventListener('seeked', done); res(); };
+    v.addEventListener('seeked', done); v.currentTime = t % v.duration; setTimeout(done, 800); });
+}
+async function exportGif(){
+  if (gifBusy || recording) return;
+  if (!S.msgs.length) return toast('Add some messages first');
+  if (!window.gifenc) return toast('GIF maker didn’t load — reload the page and try again');
+  gifBusy = true; if (playing) pause(); hover = false;
+  const btn = $('#gif-btn'), label = btn.textContent;
+  const {GIFEncoder, quantize, applyPalette} = window.gifenc;
+  const sc = schedule(), fps = +$('#gif-fps').value, gw = +$('#gif-w').value;
+  const w = Math.round(gw / 2) * 2, h = Math.round(gw * H / W / 2) * 2;
+  const off = document.createElement('canvas'); off.width = w; off.height = h;
+  const oc = off.getContext('2d', {willReadFrequently: true});
+  const enc = GIFEncoder(), step = 1000 / fps, n = Math.ceil(sc.total * fps) + 1;
+  let prev = null, pending = null;
+  const flush = () => { if (pending){ enc.writeFrame(pending.index, w, h, {palette: pending.palette, delay: Math.round(pending.delay)}); pending = null; } };
+  try {
+    for (let i = 0; i < n; i++){
+      const t = Math.min(sc.total, i / fps);
+      await seekVideoTo(t);
+      renderFrame(t); oc.drawImage(stage, 0, 0, w, h);
+      const data = oc.getImageData(0, 0, w, h).data, cur = new Uint32Array(data.buffer);
+      let same = !!prev;
+      if (same) for (let k = 0; k < cur.length; k += 7) if (cur[k] !== prev[k]){ same = false; break; }
+      if (same && pending){ pending.delay += step; }
+      else {
+        flush();
+        const palette = quantize(data, 256); pending = {index: applyPalette(data, palette), palette, delay: step};
+        prev = cur;
+      }
+      if (i % 3 === 0){ btn.textContent = `Making GIF… ${Math.round(i / n * 100)}%`; await new Promise(r => setTimeout(r, 0)); }
+    }
+    if (pending) pending.delay += 1500;   // linger on the last frame before looping
+    flush(); enc.finish();
+    await saveMovie(new Blob([enc.bytes()], {type: 'image/gif'}), exportName('gif', `${w}px`), 'gif');
+  } catch (e){ toast('Couldn’t make the GIF — try a smaller width'); console.error(e); }
+  finally { gifBusy = false; btn.textContent = label; seekVideoTo(playT); }
+}
+function stopRecording(){
+  if (!recording) return; recording = false;
+  $('#rec').classList.remove('on'); $('#export-btn').textContent = '⬇ Export movie (with sound)';
+  setTimeout(() => recorder && recorder.state !== 'inactive' && recorder.stop(), 300);
+  if (playing) pause();
+}
+// ================= CANVAS SIZE / DRAG =================
+function sizeCanvas(){
+  const [a, b] = S.aspect.split(':').map(Number);
+  if (a >= b){ H = 1080; W = Math.round(1080 * a / b); } else { W = 1080; H = Math.round(1080 * b / a); }
+  if (!recording){ stage.width = Math.round(W * RES / 2) * 2; stage.height = Math.round(H * RES / 2) * 2; }
+  fitStage();
+}
+function fitStage(){
+  const box = $('.stagewrap'), bw = box.clientWidth - 40, bh = box.clientHeight - 40;
+  const s = Math.min(bw / W, bh / H);
+  stage.style.width = Math.floor(W * s) + 'px'; stage.style.height = Math.floor(H * s) + 'px';
+}
+window.addEventListener('resize', fitStage);
+const pts = new Map(); let dragStart = null;
+function toLogical(e){ const r = stage.getBoundingClientRect(); return {x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H}; }
+function inLayer(p){ const L = layerRect(); return p.x >= L.x && p.x <= L.x + L.w && p.y >= L.y && p.y <= L.y + L.h; }
+stage.addEventListener('pointerdown', e => {
+  stage.setPointerCapture(e.pointerId); pts.set(e.pointerId, toLogical(e));
+  if (pts.size === 1){ dragStart = {p: toLogical(e), x: S.layer.x, y: S.layer.y}; dragging = true; stage.classList.add('drag'); }
+  if (pts.size === 2){ const [p1, p2] = [...pts.values()]; dragStart = {pinch: Math.hypot(p1.x-p2.x, p1.y-p2.y), scale: S.layer.scale}; }
+});
+stage.addEventListener('pointermove', e => {
+  const p = toLogical(e); hover = inLayer(p);
+  if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, p);
+  if (pts.size === 2 && dragStart.pinch){ const [p1, p2] = [...pts.values()]; setScale(dragStart.scale * Math.hypot(p1.x-p2.x, p1.y-p2.y) / dragStart.pinch); }
+  else if (dragStart && dragStart.p){
+    let nx = dragStart.x + (p.x - dragStart.p.x) / W, ny = dragStart.y + (p.y - dragStart.p.y) / H;
+    if (Math.abs(nx - 0.5) < 0.012) nx = 0.5; if (Math.abs(ny - 0.5) < 0.012) ny = 0.5;   // snap to centre
+    S.layer.x = nx; S.layer.y = ny;
+  }
+});
+const endDrag = e => { pts.delete(e.pointerId); if (!pts.size){ dragging = false; dragStart = null; stage.classList.remove('drag'); } };
+stage.addEventListener('pointerup', endDrag); stage.addEventListener('pointercancel', endDrag);
+stage.addEventListener('pointerleave', () => hover = false);
+stage.addEventListener('wheel', e => { e.preventDefault(); setScale(S.layer.scale * (e.deltaY < 0 ? 1.05 : 0.95)); }, {passive: false});
+function setScale(v){ S.layer.scale = Math.min(1.5, Math.max(0.3, v)); $('#layer-scale').value = Math.round(S.layer.scale * 100); }
+
+// ================= UI WIRING =================
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('on'), 2600); }
+$$('.tabs button').forEach(b => b.onclick = () => {
+  $$('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  $$('.pane').forEach(p => p.classList.toggle('on', p.id === 'tab-' + b.dataset.tab));
+});
+function setDark(on){ S.dark = on; document.documentElement.dataset.theme = on ? 'dark' : 'light'; $('#night').checked = on; syncColorInputs(); }
+$('#night').onchange = e => setDark(e.target.checked);
+function syncColorInputs(){ const p = palette();
+  $('#c-me-bg').value = p.meBg; $('#c-me-fg').value = p.meFg; $('#c-them-bg').value = p.themBg; $('#c-them-fg').value = p.themFg; }
+function renderStyles(){
+  $('#styles').innerHTML = '';
+  Object.entries(STYLES).forEach(([key, st]) => {
+    const d = document.createElement('div'); d.className = 'style-card' + (S.style === key ? ' on' : '');
+    const meBg = st.gradient ? `linear-gradient(90deg,${st.gradient.join(',')})` : st.meBg;
+    d.innerHTML = `<div class="sw" style="background:${st.chat};padding:6px;border-radius:8px"><i style="background:${st.themBg};border:1px solid #0001"></i><i style="background:${meBg}"></i></div>${st.name}`;
+    d.onclick = () => { S.style = key; S.colors = {}; renderStyles(); syncColorInputs(); };
+    $('#styles').appendChild(d);
+  });
+}
+[['#c-me-bg','meBg'],['#c-me-fg','meFg'],['#c-them-bg','themBg'],['#c-them-fg','themFg']].forEach(([sel, k]) => $(sel).oninput = e => S.colors[k] = e.target.value);
+const bindRange = (sel, fn) => { $(sel).oninput = e => { fn(+e.target.value); }; };
+bindRange('#font-size', v => { S.fontSize = v; });
+bindRange('#bubble-w', v => { S.bubbleW = v; });
+bindRange('#gap', v => { S.gap = v; });
+$('#show-names').onchange = e => S.showNames = e.target.value;
+$('#avatar-mode').onchange = e => S.avatarMode = e.target.value;
+$('#stamps').onchange = e => { S.stamps = e.target.value; if (S.stamps !== 'off' && !S.msgs.some(m => m.time)) toast('No timestamps in this script — paste a chat that includes them'); };
+const isGreen = h => { const n = parseInt(h.slice(1), 16), r = n>>16, g = n>>8&255, b = n&255; return g > 140 && g > r*1.4 && g > b*1.4; };
+function toggleKey(kind){
+  if (S.bg.type === kind){                      // turn it off: go back to what was there before
+    const prev = S.bgPrev || {type:'phone', chrome:true};
+    S.chrome = prev.chrome; $('#chrome').checked = prev.chrome;
+    setBg(prev.type === 'image' && !S.bg.img || prev.type === 'video' && !S.bg.video ? 'phone' : prev.type);
+    toast(kind === 'green' ? 'Green screen off' : 'Blue screen off'); return;
+  }
+  if (S.bg.type !== 'green' && S.bg.type !== 'blue') S.bgPrev = {type:S.bg.type, chrome:S.chrome};
+  setBg(kind); if (S.chrome){ S.chrome = false; $('#chrome').checked = false; }
+  if (S.layer.panel){ S.layer.panel = 0; $('#panel-op').value = 0; }
+  if (kind === 'blue') return toast('Blue screen on — key out #0047BB in your editor');
+  const p = palette();
+  toast(isGreen(p.meBg) || isGreen(p.themBg) ? 'Green screen on — your bubbles are green too, so try Blue screen' : 'Green screen on — key out #00FF00 in your editor');
+}
+$('#green-btn').onclick = $('#green-btn2').onclick = () => toggleKey('green');
+$('#blue-btn').onclick = () => toggleKey('blue');
+$('#clear-bg').onclick = $('#clear-bg2').onclick = clearMedia;
+$$('[data-bg]').forEach(b => b.onclick = () => { setBg(b.dataset.bg); if (b.dataset.bg === 'phone'){ S.chrome = true; $('#chrome').checked = true; } });
+$('#bg-color').oninput = e => { S.bg.color = e.target.value; setBg('color'); };
+function setBgFromFile(f){
+  if (!f) return; const url = URL.createObjectURL(f);
+  if (f.type.startsWith('video')){
+    const v = document.createElement('video'); v.src = url; v.loop = true; v.muted = true; v.playsInline = true; v.crossOrigin = 'anonymous';
+    v.onloadeddata = () => { if (S.bg.img) { URL.revokeObjectURL(S.bg.img.src); S.bg.img = null; } if (S.bg.video && S.bg.video !== v) S.bg.video.pause(); S.bg.video = v; setBg('video'); if ($('#bg-audio').checked) routeVideoAudio(); syncVideo(playing, nowT()); };
+  } else {
+    toast('Loading picture…');
+    const img = new Image();
+    img.onload = () => trimTransparent(img).then(im => { if (S.bg.video){ S.bg.video.pause(); S.bg.video = null; } S.bg.img = im; setBg('image'); });
+    img.src = url;
+  }
+  if (S.chrome){ S.chrome = false; $('#chrome').checked = false; }
+  S.layer.panel = S.layer.panel || 0; toast('Background set — drag the chat to position it');
+}
+$('#bg-file').onchange = e => { setBgFromFile(e.target.files[0]); e.target.value = ''; };
+// Paste a picture or short video straight from the clipboard (Cmd+V on Mac, Ctrl+V on Windows).
+document.addEventListener('paste', e => {
+  const typing = /INPUT|TEXTAREA/.test(document.activeElement.tagName) && document.activeElement.type !== 'range';
+  const item = [...(e.clipboardData ? e.clipboardData.items : [])].find(i => i.kind === 'file' && (i.type.startsWith('image/') || i.type.startsWith('video/')));
+  if (!item || typing) return;
+  e.preventDefault();
+  const f = item.getAsFile(); if (!f) return;
+  document.querySelector('[data-tab=scene]').click();
+  setBgFromFile(new File([f], f.name || ('pasted.' + (item.type.split('/')[1] || 'png')), {type: f.type}));
+  toast('Pasted — used as the background');
+});
+$('#bg-audio').onchange = () => routeVideoAudio();
+$('#aspect').onchange = e => { S.aspect = e.target.value;
+  if (S.aspect === '16:9' && S.layer.w > 0.5){ S.layer.w = 0.34; $('#layer-w').value = 34; }
+  if (S.aspect !== '16:9' && S.layer.w < 0.5){ S.layer.w = 1; $('#layer-w').value = 100; }
+  sizeCanvas(); };
+$('#chrome').onchange = e => S.chrome = e.target.checked;
+$('#contact').oninput = e => { S.contact = e.target.value; S.contactAuto = !e.target.value.trim(); };
+bindRange('#layer-scale', v => S.layer.scale = v / 100);
+bindRange('#layer-w', v => S.layer.w = v / 100);
+bindRange('#layer-h', v => S.layer.h = v / 100);
+bindRange('#panel-op', v => S.layer.panel = v / 100);
+$('#center-layer').onclick = () => { S.layer.x = 0.5; S.layer.y = 0.5; };
+$('#lead').oninput = e => { S.lead = +e.target.value || 0; invalidate(); };
+$('#tail').oninput = e => { S.tail = +e.target.value || 0; invalidate(); };
+$('#snd').onchange = e => S.sound = e.target.checked;
+bindRange('#vol', v => { S.vol = v / 100; if (master) master.gain.value = S.vol; });
+$('#snd-type').onchange = e => { S.sndType = e.target.value; audio(); playSound('them'); };
+$('#test-snd').onclick = () => { audio(); playSound('them'); setTimeout(() => playSound('me'), 350); };
+$('#res').onchange = e => { if (recording) return; RES = +e.target.value; sizeCanvas(); };
+$('#export-btn').onclick = () => recording ? stopRecording() : startRecording();
+$('#gif-btn').onclick = exportGif;
+$('#play-btn').onclick = () => playing ? pause() : play();
+$('#restart-btn').onclick = () => { restart(); };
+$('#scrub').oninput = e => { if (recording) return; seek(e.target.value / 1000 * schedule().total); };
+$('#parse-btn').onclick = () => { const t = $('#import-text').value; if (!t.trim()) return toast('Paste a conversation first'); loadParsed(parseJSON(t) || parseText(t)); };
+$('#chat-file').onchange = async e => { const f = e.target.files[0]; if (!f) return; const t = await f.text(); $('#import-text').value = t.slice(0, 20000); loadParsed(parseJSON(t) || parseText(t)); e.target.value = ''; };
+$('#add-me').onclick = () => addMsg(true); $('#add-them').onclick = () => addMsg(false);
+$('#auto-time').onclick = () => { S.msgs.forEach(m => m.delay = autoDelay(m.text)); renderTimeline(); invalidate(); toast('Delays set from message length'); };
+$('#clear-all').onclick = () => { S.msgs = []; invalidate(); renderSpeakers(); renderTimeline(); invalidate(); restart(); };
+const SAMPLE = `Bill: Hey, are you still coming tonight?
+Ted: Wait… tonight?? 😳
+Bill: The surprise party. For Sam. We planned it three weeks ago
+Ted: Oh no
+Ted: I'm literally in my pyjamas eating cereal
+Bill: It starts in 20 minutes 😂
+Ted: On my way. Don't tell anyone`;
+$('#sample-btn').onclick = () => { $('#import-text').value = SAMPLE; loadParsed(parseText(SAMPLE)); S.msgs[1].delay = 3; S.msgs[4].delay = 3.5; S.msgs[6].delay = 3; renderTimeline(); invalidate(); };
+document.addEventListener('keydown', e => { if (e.code === 'Space' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){ e.preventDefault(); playing ? pause() : play(); } });
+
+// ================= INIT =================
+setDark(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+renderStyles(); syncColorInputs(); sizeCanvas(); updateBgUI();
+wrapField($('#import-text'));
+wrapField($('#contact'), () => { S.contact = ''; S.contactAuto = true; });
+addNumberBoxes();
+$('#sample-btn').click();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
