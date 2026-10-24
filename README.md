@@ -1,5 +1,7 @@
 # SMovieS
 
+[Launch SMovieS now.] (https://dougalder.github.io/SMovieS/smovies.html)
+
 **SMovieS turns a text conversation into a short movie.** Paste in a chat, arrange the messages, choose how the phone screen should look, then record it as a video (with sounds) or an animated GIF.
 
 ![Start screen](screenshots/01-start-screen.png)
